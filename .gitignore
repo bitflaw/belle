@@ -1,0 +1,5 @@
+docs
+example/*/*/complogs.txt
+example/*/*/build
+build
+include/belle/version.hpp

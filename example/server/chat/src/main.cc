@@ -1,17 +1,12 @@
 // belle chat example
 
-#include "belle.hh"
+#include <belle/belle.hpp>
 namespace Belle = OB::Belle;
 
 #include <ctime>
 
-#include <string>
-#include <sstream>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
-#include <optional>
-#include <deque>
 
 using namespace std::string_literals;
 
@@ -128,7 +123,6 @@ std::string to_string(T t)
 }
 
 // read a file into a string
-std::optional<std::string> file(std::string const& str);
 std::optional<std::string> file(std::string const& str)
 {
   std::ifstream file {str};

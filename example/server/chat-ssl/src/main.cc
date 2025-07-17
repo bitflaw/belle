@@ -1,6 +1,6 @@
 // belle chat ssl example
 
-#include "belle.hh"
+#include <belle/belle.hpp>
 namespace Belle = OB::Belle;
 
 #include <ctime>
@@ -128,7 +128,6 @@ std::string to_string(T t)
 }
 
 // read a file into a string
-std::optional<std::string> file(std::string const& str);
 std::optional<std::string> file(std::string const& str)
 {
   std::ifstream file {str};
@@ -147,7 +146,6 @@ std::optional<std::string> file(std::string const& str)
   return content;
 }
 
-Belle::ssl::context get_ssl_context();
 Belle::ssl::context get_ssl_context()
 {
   // set the ssl context to use tls v1.2

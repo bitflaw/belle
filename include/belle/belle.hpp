@@ -1,66 +1,12 @@
-/*
-                                    88888888
-                                  888888888888
-                                 88888888888888
-                                8888888888888888
-                               888888888888888888
-                              888888  8888  888888
-                              88888    88    88888
-                              888888  8888  888888
-                              88888888888888888888
-                              88888888888888888888
-                             8888888888888888888888
-                          8888888888888888888888888888
-                        88888888888888888888888888888888
-                              88888888888888888888
-                            888888888888888888888888
-                           888888  8888888888  888888
-                           888     8888  8888     888
-                                   888    888
-
-                                   OCTOBANANA
-
-Belle
-0.5.1
-
-An HTTP / Websocket library in C++17 using Boost.Beast and Boost.ASIO.
-https://octobanana.com/software/belle
-
-Licensed under the MIT License
-Copyright (c) 2018 Brett Robinson <https://octobanana.com/>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
 #ifndef OB_BELLE_HH
 #define OB_BELLE_HH
-
-#define OB_BELLE_VERSION_MAJOR 0
-#define OB_BELLE_VERSION_MINOR 5
-#define OB_BELLE_VERSION_PATCH 1
-
 // Config Begin
 
 // compile with -DOB_BELLE_CONFIG_<OPT> or
 // comment out defines to alter the library
 
 // ssl support
+#include <boost/asio/io_context.hpp>
 #ifndef OB_BELLE_CONFIG_SSL_OFF
 #define OB_BELLE_CONFIG_SSL_ON
 #endif // OB_BELLE_CONFIG_SSL_OFF
@@ -106,18 +52,12 @@ SOFTWARE.
 #include <cctype>
 #include <cstdlib>
 #include <cstddef>
-#include <cstdint>
-#include <csignal>
 
 #include <string>
 #include <sstream>
-#include <iomanip>
-#include <vector>
-#include <array>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
-#include <iterator>
 #include <algorithm>
 #include <functional>
 #include <regex>
@@ -126,7 +66,6 @@ SOFTWARE.
 #include <utility>
 #include <initializer_list>
 #include <optional>
-#include <limits>
 #include <type_traits>
 #include <thread>
 
@@ -334,12 +273,6 @@ private:
 namespace Detail
 {
 
-// prototypes
-inline std::string lowercase(std::string str);
-inline std::optional<std::string> extension(std::string const& path);
-inline std::vector<std::string> split(std::string const& str, std::string const& delim,
-  std::size_t size = std::numeric_limits<std::size_t>::max());
-
 // string to lowercase
 inline std::string lowercase(std::string str)
 {
@@ -380,18 +313,26 @@ inline std::optional<std::string> extension(std::string const& path)
 }
 
 // split a string by a delimiter 'n' times
-inline std::vector<std::string> split(std::string const& str,
-  std::string const& delim, std::size_t times)
+inline std::vector<std::string> split(std::string const& str, std::string const& delim, std::size_t times = 0)
 {
   std::vector<std::string> vtok;
   std::size_t start {0};
   auto end = str.find(delim);
 
-  while ((times-- > 0) && (end != std::string::npos))
-  {
-    vtok.emplace_back(str.substr(start, end - start));
-    start = end + delim.length();
-    end = str.find(delim, start);
+  if(times == 0){
+    while (end != std::string::npos)
+    {
+        vtok.emplace_back(str.substr(start, end - start));
+        start = end + delim.length();
+        end = str.find(delim, start);
+    }
+  }else{
+    while ((times-- > 0) && (end != std::string::npos))
+    {
+      vtok.emplace_back(str.substr(start, end - start));
+      start = end + delim.length();
+      end = str.find(delim, start);
+    }
   }
   vtok.emplace_back(str.substr(start, end));
 
@@ -409,237 +350,8 @@ inline std::string to_string(T const& t)
 }
 
 #ifdef OB_BELLE_CONFIG_SSL_ON
-// TODO switch to boost::beast::ssl_stream when it moves out of experimental
-template<typename Next_Layer>
-class ssl_stream : public ssl::stream_base
-{
-// This class (ssl_stream) is a derivative work based on Boost.Beast,
-// orignal copyright below:
-/*
-  Copyright (c) 2016-2017 Vinnie Falco (vinnie dot falco at gmail dot com)
-
-  Boost Software License - Version 1.0 - August 17th, 2003
-
-  Permission is hereby granted, free of charge, to any person or organization
-  obtaining a copy of the software and accompanying documentation covered by
-  this license (the "Software") to use, reproduce, display, distribute,
-  execute, and transmit the Software, and to prepare derivative works of the
-  Software, and to permit third-parties to whom the Software is furnished to
-  do so, all subject to the following:
-
-  The copyright notices in the Software and this entire statement, including
-  the above license grant, this restriction and the following disclaimer,
-  must be included in all copies of the Software, in whole or in part, and
-  all derivative works of the Software, unless such copies or derivative
-  works are solely in the form of machine-executable object code generated by
-  a source language processor.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
-  SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
-  FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
-  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-  DEALINGS IN THE SOFTWARE.
-*/
-
-  using stream_type = ssl::stream<Next_Layer>;
-
-public:
-
-  using native_handle_type = typename stream_type::native_handle_type;
-  using impl_struct = typename stream_type::impl_struct;
-  using next_layer_type = typename stream_type::next_layer_type;
-  using lowest_layer_type = typename stream_type::lowest_layer_type;
-  using executor_type = typename stream_type::executor_type;
-
-  ssl_stream(Next_Layer&& arg, ssl::context& ctx) :
-    _ptr {std::make_unique<stream_type>(std::move(arg), ctx)}
-  {
-  }
-
-  executor_type get_executor() noexcept
-  {
-    return _ptr->get_executor();
-  }
-
-  native_handle_type native_handle()
-  {
-    return _ptr->native_handle();
-  }
-
-  next_layer_type const& next_layer() const
-  {
-    return _ptr->next_layer();
-  }
-
-  next_layer_type& next_layer()
-  {
-    return _ptr->next_layer();
-  }
-
-  lowest_layer_type& lowest_layer()
-  {
-    return _ptr->lowest_layer();
-  }
-
-  lowest_layer_type const& lowest_layer() const
-  {
-    return _ptr->lowest_layer();
-  }
-
-  void set_verify_mode(ssl::verify_mode v)
-  {
-    _ptr->set_verify_mode(v);
-  }
-
-  void set_verify_mode(ssl::verify_mode v, error_code& ec)
-  {
-    _ptr->set_verify_mode(v, ec);
-  }
-
-  void set_verify_depth(int depth)
-  {
-    _ptr->set_verify_depth(depth);
-  }
-
-  void set_verify_depth(int depth, error_code& ec)
-  {
-    _ptr->set_verify_depth(depth, ec);
-  }
-
-  template<typename VerifyCallback>
-  void set_verify_callback(VerifyCallback callback)
-  {
-    _ptr->set_verify_callback(callback);
-  }
-
-  template<typename VerifyCallback>
-  void set_verify_callback(VerifyCallback callback, error_code& ec)
-  {
-    _ptr->set_verify_callback(callback, ec);
-  }
-
-  void handshake(handshake_type type)
-  {
-    _ptr->handshake(type);
-  }
-
-  void handshake(handshake_type type, error_code& ec)
-  {
-    _ptr->handshake(type, ec);
-  }
-
-  template<typename ConstBufferSequence>
-  void handshake(handshake_type type, ConstBufferSequence const& buffers)
-  {
-    _ptr->handshake(type, buffers);
-  }
-
-  template<typename ConstBufferSequence>
-  void handshake(handshake_type type, ConstBufferSequence const& buffers, error_code& ec)
-  {
-    _ptr->handshake(type, buffers, ec);
-  }
-
-  template<typename HandshakeHandler>
-  BOOST_ASIO_INITFN_RESULT_TYPE(HandshakeHandler, void(error_code))
-  async_handshake(handshake_type type, BOOST_ASIO_MOVE_ARG(HandshakeHandler) handler)
-  {
-    return _ptr->async_handshake(type, BOOST_ASIO_MOVE_CAST(HandshakeHandler)(handler));
-  }
-
-  template<typename ConstBufferSequence, typename BufferedHandshakeHandler>
-  BOOST_ASIO_INITFN_RESULT_TYPE(BufferedHandshakeHandler, void (error_code, std::size_t))
-  async_handshake(handshake_type type, ConstBufferSequence const& buffers,
-    BOOST_ASIO_MOVE_ARG(BufferedHandshakeHandler) handler)
-  {
-    return _ptr->async_handshake(type, buffers, BOOST_ASIO_MOVE_CAST(BufferedHandshakeHandler)(handler));
-  }
-
-  void shutdown()
-  {
-    _ptr->shutdown();
-  }
-
-  void shutdown(error_code& ec)
-  {
-    _ptr->shutdown(ec);
-  }
-
-  template<typename ShutdownHandler>
-  BOOST_ASIO_INITFN_RESULT_TYPE(ShutdownHandler, void (error_code))
-  async_shutdown(BOOST_ASIO_MOVE_ARG(ShutdownHandler) handler)
-  {
-    return _ptr->async_shutdown(BOOST_ASIO_MOVE_CAST(ShutdownHandler)(handler));
-  }
-
-  template<typename ConstBufferSequence>
-  std::size_t write_some(ConstBufferSequence const& buffers)
-  {
-    return _ptr->write_some(buffers);
-  }
-
-  template<typename ConstBufferSequence>
-  std::size_t write_some(ConstBufferSequence const& buffers, error_code& ec)
-  {
-    return _ptr->write_some(buffers, ec);
-  }
-
-  template<typename ConstBufferSequence, typename WriteHandler>
-  BOOST_ASIO_INITFN_RESULT_TYPE(WriteHandler, void (error_code, std::size_t))
-  async_write_some(ConstBufferSequence const& buffers,
-    BOOST_ASIO_MOVE_ARG(WriteHandler) handler)
-  {
-    return _ptr->async_write_some(buffers, BOOST_ASIO_MOVE_CAST(WriteHandler)(handler));
-  }
-
-  template<typename MutableBufferSequence>
-  std::size_t read_some(MutableBufferSequence const& buffers)
-  {
-    return _ptr->read_some(buffers);
-  }
-
-  template<typename MutableBufferSequence>
-  std::size_t read_some(MutableBufferSequence const& buffers, error_code& ec)
-  {
-    return _ptr->read_some(buffers, ec);
-  }
-
-  template<typename MutableBufferSequence, typename ReadHandler>
-  BOOST_ASIO_INITFN_RESULT_TYPE(ReadHandler, void(error_code, std::size_t))
-  async_read_some(MutableBufferSequence const& buffers,
-    BOOST_ASIO_MOVE_ARG(ReadHandler) handler)
-  {
-    return _ptr->async_read_some(buffers, BOOST_ASIO_MOVE_CAST(ReadHandler)(handler));
-  }
-
-  template<typename SyncStream>
-  friend void teardown(websocket::role_type,
-    ssl_stream<SyncStream>& stream, error_code& ec);
-
-  template<typename AsyncStream, typename TeardownHandler>
-  friend void async_teardown(websocket::role_type,
-    ssl_stream<AsyncStream>& stream, TeardownHandler&& handler);
-
-private:
-
-  std::unique_ptr<stream_type> _ptr;
-}; // class ssl_stream
-
-template<typename SyncStream>
-inline void teardown(websocket::role_type role,
-  ssl_stream<SyncStream>& stream, error_code& ec)
-{
-  websocket::teardown(role, *stream._ptr, ec);
-}
-
-template<typename AsyncStream, typename TeardownHandler>
-inline void async_teardown(websocket::role_type role,
-  ssl_stream<AsyncStream>& stream, TeardownHandler&& handler)
-{
-  websocket::async_teardown(role, *stream._ptr, std::forward<TeardownHandler>(handler));
-}
+template <typename Stream_T>
+using ssl_stream = net::ssl::stream<Stream_T>;
 #endif // OB_BELLE_CONFIG_SSL_ON
 
 } // namespace Detail
@@ -820,7 +532,7 @@ public:
   // serialize path and query parameters to the target
   void params_serialize()
   {
-    std::string path {target().to_string()};
+    std::string path {target()};
 
     _path.clear();
     _path.emplace_back(path);
@@ -842,7 +554,7 @@ public:
   // parse the query parameters from the target
   void params_parse()
   {
-    std::string path {target().to_string()};
+    std::string path {target()};
 
     // separate the query params
     auto params = Detail::split(path, "?", 1);
@@ -1237,14 +949,19 @@ private:
         }
       );
 
-      derived().socket().async_accept_ex(_ctx.req,
-        [&](auto& res)
-        {
-          for (auto const& e : _attr->http_headers)
+      derived().socket().set_option(
+        beast::websocket::stream_base::decorator(
+          [&](auto& res)
           {
-            res.insert(e.name_string(), e.value());
+            for (auto const& e : _attr->http_headers)
+            {
+              res.insert(e.name_string(), e.value());
+            }
           }
-        },
+        )
+      );
+
+      derived().socket().async_accept(_ctx.req,
         net::bind_executor(_strand,
           [self = derived().shared_from_this()](error_code ec)
           {
@@ -1414,7 +1131,7 @@ private:
 
     Websocket(tcp::socket&& socket_, std::shared_ptr<Attr> const attr_,
       Request&& req_, fns_on_websocket const& on_websocket_) :
-      Websocket_Base<Websocket> {socket_.get_executor().context(), attr_,
+      Websocket_Base {static_cast<net::io_context&>(socket_.get_executor().context()), attr_,
         std::move(req_), on_websocket_},
       _socket {std::move(socket_)}
     {
@@ -1474,7 +1191,7 @@ private:
 
     Websockets(Detail::ssl_stream<tcp::socket>&& socket_, std::shared_ptr<Attr> const attr_,
       Request&& req_, fns_on_websocket const& on_websocket_) :
-      Websocket_Base<Websockets> {socket_.get_executor().context(), attr_,
+      Websocket_Base {static_cast<net::io_context&>(socket_.get_executor().context()), attr_,
         std::move(req_), on_websocket_},
       _socket {std::move(socket_)}
     {
@@ -1584,7 +1301,8 @@ private:
         return 404;
       }
 
-      std::string path {_attr->public_dir + _ctx.req.target().to_string()};
+      std::string half_path {_ctx.req.target()};
+      std::string path {_attr->public_dir + half_path};
 
       if (path.back() == '/')
       {
@@ -1641,7 +1359,7 @@ private:
       std::regex_constants::match_flag_type const rx_flgs {std::regex_constants::match_not_null};
 
       // the request path
-      std::string path {_ctx.req.target().to_string()};
+      std::string path {_ctx.req.target()};
 
       // separate the query parameters
       auto params = Detail::split(path, "?", 1);
@@ -1807,7 +1525,7 @@ private:
     bool handle_websocket()
     {
       // the request path
-      std::string path {_ctx.req.target().to_string()};
+      std::string path {_ctx.req.target()};
 
       // separate the query parameters
       auto params = Detail::split(path, "?", 1);
@@ -1874,7 +1592,7 @@ private:
       }
 
       // check if socket has been upgraded or closed
-      if (_timer.expires_at() == (std::chrono::steady_clock::time_point::min)())
+      if (_timer.expiry() == std::chrono::steady_clock::time_point::min())
       {
         return;
       }
@@ -2019,7 +1737,7 @@ private:
   public:
 
     Http(tcp::socket socket_, std::shared_ptr<Attr> const attr_) :
-      Http_Base<Http, Websocket> {socket_.get_executor().context(), attr_},
+      Http_Base {static_cast<net::io_context&>(socket_.get_executor().context()), attr_},
       _socket {std::move(socket_)}
     {
     }
@@ -2078,7 +1796,7 @@ private:
   public:
 
     Https(tcp::socket&& socket_, std::shared_ptr<Attr> const attr_) :
-      Http_Base<Https, Websockets> {socket_.get_executor().context(), attr_},
+      Http_Base {static_cast<net::io_context&>(socket_.get_executor().context()), attr_},
       _socket {std::move(socket_), attr_->ssl_context}
     {
       this->_close = true;
@@ -2948,7 +2666,7 @@ public:
       }
 
       // check if socket has been closed
-      if (_timer.expires_at() == (std::chrono::steady_clock::time_point::min)())
+      if (_timer.expiry() == std::chrono::steady_clock::time_point::min())
       {
         return;
       }
@@ -3196,7 +2914,7 @@ public:
   public:
     Https(net::io_context& io_, std::shared_ptr<Attr> attr_) :
       Http_Base<Https>(io_, attr_),
-      _socket {std::move(tcp::socket(io_)), attr_->ssl_context}
+      _socket {tcp::socket(io_), attr_->ssl_context}
     {
       _close = true;
     }

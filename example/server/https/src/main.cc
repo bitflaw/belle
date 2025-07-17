@@ -1,6 +1,6 @@
 // belle https example
 
-#include "belle.hh"
+#include <belle/belle.hpp>
 namespace Belle = OB::Belle;
 
 #include <ctime>
@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
     // the http method as a string
     << "[" << ctx.req.method_string() << "] "
     // the full request path as a string
-    << "[" << ctx.req.target().to_string() << "] "
+    << "[" << ctx.req.target() << "] "
     // the http referer header
     << "[" << rf << "] "
     // the http user-agent header

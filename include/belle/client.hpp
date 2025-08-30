@@ -15,7 +15,7 @@
 
 #include "./request.hpp"
 
-namespace OB::Belle {
+namespace Belle {
 
 #ifdef OB_BELLE_CONFIG_SSL_ON
 namespace ssl = boost::asio::ssl;

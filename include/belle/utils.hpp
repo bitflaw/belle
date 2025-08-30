@@ -19,7 +19,7 @@
 
 namespace net = boost::asio;
 
-namespace OB::Belle::Detail {
+namespace Belle::Detail {
 
 // string to lowercase
 inline std::string lowercase(std::string str)

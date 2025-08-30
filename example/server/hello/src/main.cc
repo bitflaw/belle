@@ -1,7 +1,6 @@
 // belle hello example
 
-#include <belle/belle.hpp>
-namespace Belle = OB::Belle;
+#include <belle/server.hpp>
 
 #include <string>
 #include <iostream>

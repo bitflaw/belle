@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-namespace OB::Belle {
+namespace Belle {
 // store a type erased websocket
 struct Websocket_Session
 {

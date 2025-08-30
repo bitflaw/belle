@@ -4,7 +4,7 @@
 #include <boost/beast/websocket.hpp>
 #include "./utils.hpp"
 
-namespace OB::Belle {
+namespace Belle {
 
 namespace beast = boost::beast;
 namespace http = boost::beast::http;

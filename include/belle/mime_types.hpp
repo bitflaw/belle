@@ -3,7 +3,7 @@
 #include <string>
 #include "./utils.hpp"
 
-namespace OB::Belle {
+namespace Belle {
 
 std::unordered_map<std::string, std::string> const mime_types
 {

@@ -1,14 +1,12 @@
 // belle chat ssl example
 
-#include <belle/belle.hpp>
-namespace Belle = OB::Belle;
+#include <belle/server.hpp>
 
 #include <ctime>
 
 #include <string>
 #include <sstream>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
 #include <optional>
 #include <deque>

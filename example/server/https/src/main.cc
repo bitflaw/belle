@@ -1,7 +1,6 @@
 // belle https example
 
-#include <belle/belle.hpp>
-namespace Belle = OB::Belle;
+#include <belle/server.hpp>
 
 #include <ctime>
 

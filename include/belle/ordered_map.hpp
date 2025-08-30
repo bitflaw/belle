@@ -6,7 +6,7 @@
 // enables fast random lookup and insert ordered iterators
 // unordered map stores key value pairs
 // queue holds insert ordered iterators to each key in the unordered map
-namespace OB::Belle {
+namespace Belle {
 
 template<typename K, typename V>
 class Ordered_Map

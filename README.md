@@ -14,8 +14,7 @@ An HTTP server listening on 127.0.0.1:8080
 that responds to a POST request to the path '/'.
 
 ```cpp
-#include <belle/belle.hpp>
-namespace Belle = OB::Belle;
+#include <belle/server.hpp>
 
 #include <string>
 
@@ -41,8 +40,7 @@ int main()
 An HTTP client connecting to 127.0.0.1:8080
 that sends a POST request to the path '/'.
 ```cpp
-#include <belle/belle.hpp>
-namespace Belle = OB::Belle;
+#include <belle/client.hpp>
 
 #include <string>
 #include <iostream>
@@ -118,7 +116,6 @@ The following lists describe an overview of the current implemented features, al
 - General optimizations to improve performance
 
 ## Install
-Belle is a single header file but includes a version header file that defines the current version of the library.
 This library now uses CMake and installs to the system as follows:
 
 ```bash
@@ -150,7 +147,7 @@ Use the following define flags at compile time to alter the library:
 #include <belle/belle.hpp>
 ```
 
-Make sure to link the __Dependencies__, along with meeting the __Requirements__ listed above.
+Make sure to link the __Requirements__ listed above.
 
 ## Documentation
 The source code contains helpful comments and explanations.
@@ -179,16 +176,17 @@ $ ./app
 ```
 
 ### Server
-* __hello__: an HTTP server with a get endpoint, post endpoint, and static file handling
-* __http__: a multithreaded HTTP server with multiple endpoints, static file handling, signal handling, and error handling
-* __https__: a multithreaded HTTPS server with multiple endpoints, static file handling, signal handling, and error handling
-* __chat__: a single threaded HTTP / Websocket chat room server with multiple endpoints, static file handling, signal handling, and error handling, with a basic html/css/js client interface
-* __chat-ssl__: a single threaded HTTPS / Websocket Secure chat room server with multiple endpoints, static file handling, signal handling,
-and error handling, with a basic html/css/js client interface
+- __hello__: an HTTP server with a get endpoint, post endpoint, and static file handling
+- __http__: a multithreaded HTTP server with multiple endpoints, static file handling, signal handling, and error handling
+- __https__: a multithreaded HTTPS server with multiple endpoints, static file handling, signal handling, and error handling
+- __chat__: a single threaded HTTP / Websocket chat room server with multiple endpoints, static file handling, signal handling, and error handling, with a basic html/css/js client interface
+- __chat-ssl__: a single threaded HTTPS / Websocket Secure chat room server with multiple endpoints, static file handling, signal handling,
+-nd error handling, with a basic html/css/js client interface
+- __file_upload__: a single-threaded http server that can directly stream files from disk into the response body, ideal for large-file uploads.
 
 ### Client
-* __http__: an HTTP client that makes multiple requests to a remote endpoint
-* __https__: an HTTPS client that makes multiple requests to a remote endpoint
+- __http__: an HTTP client that makes multiple requests to a remote endpoint
+- __https__: an HTTPS client that makes multiple requests to a remote endpoint
 
 ## Tests
 There are currently no tests at this time, but there are plans to add them in the future.

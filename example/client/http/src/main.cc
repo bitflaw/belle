@@ -1,7 +1,6 @@
 // belle client http example
 
-#include <belle/belle.hpp>
-namespace Belle = OB::Belle;
+#include <belle/client.hpp>
 
 #include <string>
 #include <iostream>
